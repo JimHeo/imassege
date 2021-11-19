@@ -7,7 +7,7 @@ Pytorch 1.9.1
 ```
 imassege
 ├──dataset/
-|  ├── put-on-your-dataset/
+|  ├── your-own-dataset/
 ├──dcnn_module/
 |  ├── neural_network/
 |  |     ├── unet.py
