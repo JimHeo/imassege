@@ -44,13 +44,13 @@ DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 PIN_MEMORY = True if DEVICE == "cuda" else False
 
 # define the number of channels in the input, number of classes,
-INPUT_CHANNEL = 1
+INPUT_CHANNEL = 3
 NUM_CLASSES = 1
 
 # initialize learning rate, number of epochs to train for, and the
 # batch size
 INIT_LR = 0.001
-NUM_EPOCHS = 150
+NUM_EPOCHS = 300
 BATCH_SIZE = 64
 # define the input image dimensions
 INPUT_IMAGE_WIDTH = 160
@@ -61,6 +61,7 @@ THRESHOLD = 0.5
 BASE_OUTPUT = "output"
 # define the path to the output serialized model, model training
 # plot, and testing image paths
-MODEL_PATH = os.path.join(BASE_OUTPUT, "unet_tgs_salt.pth")
+# MODEL_PATH = os.path.join(BASE_OUTPUT, "unet_tgs_salt.pth")
+MODEL_PATH = os.path.join(BASE_OUTPUT, "unet_blur_detection.pth")
 TEST_PATHS = os.path.join(BASE_OUTPUT, "test_paths.txt")
 PREDICTION_OUTPUT = os.path.join(BASE_OUTPUT, "predictions")

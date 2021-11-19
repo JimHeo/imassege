@@ -49,8 +49,9 @@ class SegmentationDataset(Dataset):
                 if max_value: image = (image - min_value) / (max_value - min_value)
             elif self.normalization == 'division':
                 image = image / 255.0
-                
-        image = np.expand_dims(image, 0)
+        
+        if self.channels == 1: image = np.expand_dims(image, 0)
+        else: image = np.transpose(image, (2, 0, 1))
         mask[mask == 255] = 1
         
         image = torch.as_tensor(image, dtype=torch.float32)

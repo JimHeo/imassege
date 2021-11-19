@@ -94,7 +94,8 @@ for epoch in tqdm(range(config.NUM_EPOCHS)):
         opt.step()
         # add the loss to the total training loss so far
         total_train_loss += loss
-        for i in range(len(metrics)): total_train_metrics[i] += metrics[i](pred, y).cpu().detach().numpy()
+        for i in range(len(metrics)):
+            total_train_metrics[i] += metrics[i](pred, y).cpu().detach().numpy()
     
     # switch off autograd
     with torch.no_grad():

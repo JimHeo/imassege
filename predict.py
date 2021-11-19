@@ -41,7 +41,7 @@ def make_predictions(model, image_path):
         # # resize the image
         image = cv2.resize(image, (config.INPUT_IMAGE_HEIGHT,  config.INPUT_IMAGE_WIDTH))
         # find the filename and generate the path to ground truth
-        filename = image_path.split(os.path.sep)[-1]
+        filename = image_path.split(os.path.sep)[-1].split(".")[0] + ".png"
         gt_path = os.path.join(config.MASK_DATASET_PATH, filename)
         # load the ground-truth segmentation mask in grayscale mode
         # and resize it
@@ -69,14 +69,17 @@ def make_predictions(model, image_path):
             
         pred_mask = pred_mask.astype(np.uint8)
         # filter out the weak predictions and convert them to integers
-        pred_mask = cv2.resize(pred_mask, gt_mask.shape, interpolation=cv2.INTER_NEAREST)
+        print(pred_mask.shape)
+        pred_mask = cv2.resize(pred_mask, gt_mask.shape[::-1], interpolation=cv2.INTER_NEAREST)
+        print(pred_mask.shape, gt_mask.shape, origin.shape)
         # prepare a plot for visualization
         prepare_plot(origin, gt_mask, pred_mask, base_name)
         
 # load the image paths in our testing file and randomly select 10
 # image paths
 print("[INFO] loading up test image paths...")
-image_paths = open(config.TEST_PATHS).read().strip().split("\n")
+with open(config.TEST_PATHS, 'r') as f:
+    image_paths = f.read().strip().split("\n")
 image_paths = np.random.choice(image_paths, size=10)
 # load our model from disk and flash it to the current device
 print("[INFO] load up model...")
@@ -86,4 +89,3 @@ model.load_state_dict(torch.load(config.MODEL_PATH))
 for path in image_paths:
     # make predictions and visualize the results
     make_predictions(model, path)
-    
