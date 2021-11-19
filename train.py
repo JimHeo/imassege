@@ -1,7 +1,7 @@
 import dcnn_module.config as config
 from dcnn_module.dataset import SegmentationDataset
 from dcnn_module.neural_network.mini_unet import UNet
-from dcnn_module.metrics import Accuracy, F1_Score, IOU
+from dcnn_module.utils.metrics import Accuracy, F1_Score, IOU
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -18,9 +18,9 @@ import os
 # load the image and mask filepaths in a sorted manner
 image_paths = sorted(list(paths.list_images(config.IMAGE_DATASET_PATH)))
 mask_paths = sorted(list(paths.list_images(config.MASK_DATASET_PATH)))
-# partition the data into training and testing splits using 80% of
-# the data for training and the remaining 20% for testing
 
+# partition the data into training and testing splits
+# using 80% of the data for training and the remaining 20% for testing
 if config.TEST_SPLIT:
     split = train_test_split(image_paths, mask_paths, test_size=config.TEST_SPLIT, random_state=42)
     # unpack the data split
@@ -37,11 +37,13 @@ with open(config.TEST_PATHS, "w") as f:
     f.write("\n".join(test_images))
 
 # create the train and test datasets
-resize = (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH)
+patch_size = (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH)
 training_set = SegmentationDataset(image_paths=train_images, mask_paths=train_masks,
-                                   resize=resize, channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES)
+                                   resize=None, random_crop=patch_size, normalization="z-score",
+                                   channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES)
 test_set = SegmentationDataset(image_paths=test_images, mask_paths=test_masks,
-                               resize=resize, channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES)
+                               resize=None, random_crop=None, normalization="z-score",
+                               channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES)
 
 print(f"[INFO] found {len(training_set)} examples in the training set...")
 print(f"[INFO] found {len(test_set)} examples in the test set...")
@@ -55,7 +57,7 @@ test_loader = DataLoader(test_set, shuffle=False,
 
 # initialize Neural Network model
 model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES).to(config.DEVICE)
-# summary(model, (64, 1, 160, 160))
+# summary(model, (config.BATCH_SIZE, config.INPUT_CHANNEL, config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH))
 
 # initialize loss function and optimizer
 if config.NUM_CLASSES == 1: loss_func = BCEWithLogitsLoss()
@@ -72,6 +74,7 @@ H = {"train_loss": [], "test_loss": []}
 for metric in metrics:
     H["train_" + str(metric)] = []
     H["test_" + str(metric)] = []
+
 # loop over epochs
 print("[INFO] training the network...")
 start_time = time.time()
@@ -123,6 +126,7 @@ for epoch in tqdm(range(config.NUM_EPOCHS)):
     for total_train_metric, total_test_metric in zip(total_train_metrics, total_test_metrics):
         avg_train_metrics.append(total_train_metric / train_steps)
         avg_test_metrics.append(total_test_metric / test_steps)
+        
     # update our training history
     H["train_loss"].append(avg_train_loss.cpu().detach().numpy())
     H["test_loss"].append(avg_test_loss.cpu().detach().numpy())

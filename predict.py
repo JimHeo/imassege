@@ -1,6 +1,7 @@
 import dcnn_module.config as config
-from dcnn_module.neural_network.mini_unet import UNet
-from dcnn_module.metrics import Accuracy, F1_Score, IOU
+from dcnn_module.neural_network.unet import UNet
+from dcnn_module.utils.metrics import Accuracy, F1_Score, IOU
+from dcnn_module.utils.preprocessing import cropping_to_fit, padding_to_fit, normalize
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -36,10 +37,11 @@ def make_predictions(model, image_path):
         else:
             image = cv2.imread(image_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = image.astype(np.float32) / 255.0
         origin = image.copy()
-        # # resize the image
-        image = cv2.resize(image, (config.INPUT_IMAGE_HEIGHT,  config.INPUT_IMAGE_WIDTH))
+        # resize the image
+        image = cropping_to_fit(image, level=config.POOLING_LEVEL)
+        image = image.astype(np.float32)
+        image = normalize(image, type="z-score")
         # find the filename and generate the path to ground truth
         filename = image_path.split(os.path.sep)[-1].split(".")[0] + ".png"
         gt_path = os.path.join(config.MASK_DATASET_PATH, filename)
@@ -56,7 +58,7 @@ def make_predictions(model, image_path):
         image = np.expand_dims(image, 0)
         image = torch.from_numpy(image).to(config.DEVICE)
         # make the prediction, pass the results through the sigmoid
-        # function, and convert the result to a NumPy array
+        # function, and convert the result to a numpy array
         pred_mask = model(image).squeeze()
         if config.NUM_CLASSES == 1:
             pred_mask = torch.sigmoid(pred_mask)
@@ -68,17 +70,14 @@ def make_predictions(model, image_path):
             pred_mask = pred_mask.cpu().numpy()
             
         pred_mask = pred_mask.astype(np.uint8)
-        # filter out the weak predictions and convert them to integers
-        print(pred_mask.shape)
-        pred_mask = cv2.resize(pred_mask, gt_mask.shape[::-1], interpolation=cv2.INTER_NEAREST)
-        print(pred_mask.shape, gt_mask.shape, origin.shape)
+        pred_mask = padding_to_fit(pred_mask, gt_mask.shape)
         # prepare a plot for visualization
         prepare_plot(origin, gt_mask, pred_mask, base_name)
         
 # load the image paths in our testing file and randomly select 10
 # image paths
 print("[INFO] loading up test image paths...")
-with open(config.TEST_PATHS, 'r') as f:
+with open(config.TEST_PATHS, "r") as f:
     image_paths = f.read().strip().split("\n")
 image_paths = np.random.choice(image_paths, size=10)
 # load our model from disk and flash it to the current device

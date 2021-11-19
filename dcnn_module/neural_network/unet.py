@@ -61,12 +61,12 @@ class Encoder(nn.Module):
         # initialize an empty list to store the intermediate outputs
         block_outputs = []
         # loop through the encoder blocks
-        for block in self.enc_blocks:
+        for i, block in enumerate(self.enc_blocks):
             # pass the inputs through the current encoder block, store
             # the outputs, and then apply maxpooling on the output
             x = block(x)
             block_outputs.append(x)
-            x = self.pool(x)
+            if i != len(self.enc_blocks) - 1: x = self.pool(x)
         # return the list containing the intermediate outputs
         return block_outputs
     
