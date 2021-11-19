@@ -33,9 +33,8 @@ else:
 # write the testing image paths to disk so that we can use then
 # when evaluating/testing our model
 print("[INFO] saving testing image paths...")
-f = open(config.TEST_PATHS, "w")
-f.write("\n".join(test_images))
-f.close()
+with open(config.TEST_PATHS, "w") as f:
+    f.write("\n".join(test_images))
 
 # create the train and test datasets
 resize = (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH)
