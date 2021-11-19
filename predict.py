@@ -8,6 +8,9 @@ import torch
 import cv2
 import os
 
+metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IOU(config.NUM_CLASSES)]
+total_metrics = [0. for _ in range(len(metrics))]
+
 def prepare_plot(origin, gt_mask, pred_mask, base_name=None):
     # initialize our figure
     figure, ax = plt.subplots(nrows=1, ncols=3, figsize=(10, 10))
@@ -71,6 +74,8 @@ def make_predictions(model, image_path):
             
         pred_mask = pred_mask.astype(np.uint8)
         pred_mask = padding_to_fit(pred_mask, gt_mask.shape)
+        for i in range(len(metrics)):
+            total_metrics[i] += metrics[i](pred_mask, gt_mask).cpu().detach().numpy()
         # prepare a plot for visualization
         prepare_plot(origin, gt_mask, pred_mask, base_name)
         
@@ -88,3 +93,7 @@ model.load_state_dict(torch.load(config.MODEL_PATH))
 for path in image_paths:
     # make predictions and visualize the results
     make_predictions(model, path)
+
+avg_metrics = []
+for total_metric in total_metrics:
+    avg_metrics.append(total_metric / len(image_paths))
