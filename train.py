@@ -7,6 +7,7 @@ from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torchinfo import summary
 from sklearn.model_selection import train_test_split
+from math import ceil
 from imutils import paths
 from tqdm import tqdm
 import matplotlib.pyplot as plt
@@ -56,14 +57,17 @@ test_loader = DataLoader(test_set, shuffle=False,
 # initialize Neural Network model
 model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES).to(config.DEVICE)
 # summary(model, (64, 1, 160, 160))
+
 # initialize loss function and optimizer
 if config.NUM_CLASSES == 1: loss_func = BCEWithLogitsLoss()
 else: loss_func = CrossEntropyLoss()
 metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IOU(config.NUM_CLASSES)]
 opt = Adam(model.parameters(), lr=config.INIT_LR)
+
 # calculate steps per epoch for training and test set
-train_steps = len(training_set) // config.BATCH_SIZE
-test_steps = len(test_set) // config.BATCH_SIZE
+train_steps = ceil(len(training_set) / config.BATCH_SIZE)
+test_steps = ceil(len(test_set) / config.BATCH_SIZE)
+
 # initialize a dictionary to store training history
 H = {"train_loss": [], "test_loss": []}
 for metric in metrics:
@@ -80,7 +84,8 @@ for epoch in tqdm(range(config.NUM_EPOCHS)):
     total_test_loss = 0.
     total_train_metrics = [0. for _ in range(len(metrics))]
     total_test_metrics = [0. for _ in range(len(metrics))]
-	# loop over the training set
+
+    # loop over the training set
     for (x, y) in train_loader:
         # send the input to the device
         (x, y) = (x.to(config.DEVICE), y.to(config.DEVICE))
@@ -96,7 +101,7 @@ for epoch in tqdm(range(config.NUM_EPOCHS)):
         total_train_loss += loss
         for i in range(len(metrics)):
             total_train_metrics[i] += metrics[i](pred, y).cpu().detach().numpy()
-    
+            
     # switch off autograd
     with torch.no_grad():
         # set the model in evaluation mode
@@ -110,6 +115,7 @@ for epoch in tqdm(range(config.NUM_EPOCHS)):
             total_test_loss += loss_func(pred, y)
             for i in range(len(metrics)):
                 total_test_metrics[i] += metrics[i](pred, y).cpu().detach().numpy()
+                
     # calculate the average training and validation loss
     avg_train_loss = total_train_loss / train_steps
     avg_test_loss = total_test_loss / test_steps
