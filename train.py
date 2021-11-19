@@ -40,10 +40,12 @@ with open(config.TEST_PATHS, "w") as f:
 patch_size = (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH)
 training_set = SegmentationDataset(image_paths=train_images, mask_paths=train_masks,
                                    resize=None, random_crop=patch_size, normalization="z-score",
-                                   channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES)
+                                   channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES,
+                                   pooling_level=config.POOLING_LEVEL)
 test_set = SegmentationDataset(image_paths=test_images, mask_paths=test_masks,
-                               resize=None, random_crop=None, normalization="z-score",
-                               channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES)
+                               resize=None, random_crop=patch_size, normalization="z-score",
+                               channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES,
+                               pooling_level=config.POOLING_LEVEL)
 
 print(f"[INFO] found {len(training_set)} examples in the training set...")
 print(f"[INFO] found {len(test_set)} examples in the test set...")
