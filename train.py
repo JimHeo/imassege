@@ -1,6 +1,6 @@
 import dcnn_module.config as config
 from dcnn_module.dataset import SegmentationDataset
-from dcnn_module.neural_network.mini_unet import UNet
+from dcnn_module.neural_network.unet import UNet
 from dcnn_module.utils.metrics_torch import Accuracy, F1_Score, IoU
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss
 from torch.optim import Adam

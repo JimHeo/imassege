@@ -24,7 +24,7 @@ class Confusion_Matrix(nn.Module):
     
     def forward(self, y_pred, y_true):
         if self.num_classes > 1: y_true = to_categorical(y_true, self.num_classes)
-        
+
         axis = (0, 1)
         # calculate the true positive, false positive, false positive and true negative
         tp = np.sum(y_pred * y_true, axis=axis, dtype=np.float32)
@@ -118,62 +118,3 @@ class IoU(nn.Module):
         iou = np.sum(iou) / self.num_classes
     
         return iou
-        
-
-# def confusion_matrix(y_pred, y_true, num_classes=1):
-#     if num_classes > 1: y_true = to_categorical(y_true, num_classes)
-    
-#     axis = (0, 1)
-#     # calculate the true positive, false positive, false positive and true negative
-#     tp = np.sum(y_pred * y_true, axis=axis, dtype=np.float32)
-#     fp = np.sum(y_pred * (1 - y_true), axis=axis, dtype=np.float32)
-#     fn = np.sum((1 - y_pred) * y_true, axis=axis, dtype=np.float32)
-#     tn = np.sum((1 - y_pred) * (1 - y_true), axis=axis, dtype=np.float32)
-    
-#     return tp, fp, fn, tn
-
-# def accuracy(y_pred, y_true, num_classes=1):
-#     epsilon = 1e-7
-#     tp, fp, fn, tn = confusion_matrix(y_pred, y_true, num_classes)
-    
-#     acc = (tp + tn + epsilon) / (tp + fp + fn + tn + epsilon)
-#     acc = np.sum(acc) / num_classes
-    
-#     return acc
-
-# def precision(y_pred, y_true, num_classes=1):
-#     epsilon = 1e-7
-#     tp, fp, fn, tn = confusion_matrix(y_pred, y_true, num_classes)
-    
-#     pre = (tp + epsilon) / (tp + fp + epsilon)
-#     pre = np.sum(pre) / num_classes
-    
-#     return pre
-
-# def recall(y_pred, y_true, num_classes=1):
-#     epsilon = 1e-7
-#     tp, fp, fn, tn = confusion_matrix(y_pred, y_true, num_classes)
-    
-#     rec = (tp + epsilon) / (tp + fn + epsilon)
-#     rec = np.sum(rec) / num_classes
-    
-#     return rec
-
-# def f1_score(y_pred, y_true, num_classes=1):
-#     epsilon = 1e-7
-#     tp, fp, fn, tn = confusion_matrix(y_pred, y_true, num_classes)
-    
-#     f1 = (2 * tp + epsilon) / (2 * tp + fp + fn + epsilon)
-#     f1 = np.sum(f1) / num_classes
-    
-#     return f1
-
-# def iou(y_pred, y_true, num_classes=1):
-#     epsilon = 1e-7
-#     tp, fp, fn, tn = confusion_matrix(y_pred, y_true, num_classes)
-    
-#     jaccard = (tp + epsilon) / (tp + fp + fn + epsilon)
-#     jaccard = np.sum(jaccard) / num_classes
-    
-#     return jaccard
-    

@@ -56,8 +56,8 @@ INPUT_IMAGE_HEIGHT = 256
 INIT_LR = 0.001
 NUM_EPOCHS = 10
 BATCH_SIZE = 32
-# POOLING_LEVEL = 4
-POOLING_LEVEL = 1
+POOLING_LEVEL = 4
+# POOLING_LEVEL = 1
 
 # define threshold to filter weak predictions
 THRESHOLD = 0.5

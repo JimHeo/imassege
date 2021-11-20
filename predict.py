@@ -1,5 +1,5 @@
 import dcnn_module.config as config
-from dcnn_module.neural_network.mini_unet import UNet
+from dcnn_module.neural_network.unet import UNet
 from dcnn_module.utils.preprocessing import cropping_to_fit, padding_to_fit, normalize
 from dcnn_module.utils.metrics_numpy import Accuracy, F1_Score, IoU
 import matplotlib.pyplot as plt
@@ -46,13 +46,14 @@ def make_predictions(model, image_path):
         image = cropping_to_fit(image, level=config.POOLING_LEVEL)
         image = image.astype(np.float32)
         image = normalize(image, type="z-score")
+        
         # find the filename and generate the path to ground truth
         filename = image_path.split(os.path.sep)[-1].split(".")[0] + ".png"
         gt_path = os.path.join(config.MASK_DATASET_PATH, filename)
         # load the ground-truth segmentation mask in grayscale mode
-        # and resize it
         gt_mask = cv2.imread(gt_path, cv2.IMREAD_GRAYSCALE)
-        # gt_mask = cv2.resize(gt_mask, (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_HEIGHT))
+        # if needed, convert 255 to 1
+        gt_mask[gt_mask == 255] = 1
         
         # make the channel axis to be the leading one, add a batch
         # dimension, create a PyTorch tensor, and flash it to the
@@ -67,10 +68,8 @@ def make_predictions(model, image_path):
         if config.NUM_CLASSES == 1:
             pred_mask = torch.sigmoid(pred_mask)
             pred_mask = pred_mask.cpu().numpy()
-            pred_mask = (pred_mask > config.THRESHOLD) * 255
+            pred_mask = (pred_mask > config.THRESHOLD).astype(np.uint8)
         else:
-            # if needed, convert 255 to 1
-            gt_mask[gt_mask == 255] = 1
             pred_mask = torch.softmax(pred_mask, dim=0)
             pred_mask = pred_mask.cpu().numpy()
             pred_mask = np.transpose(pred_mask, (1, 2, 0))
@@ -90,7 +89,8 @@ def make_predictions(model, image_path):
 print("[INFO] loading up test image paths...")
 with open(config.TEST_PATHS, "r") as f:
     image_paths = f.read().strip().split("\n")
-image_paths = np.random.choice(image_paths, size=10)
+# image_paths = np.random.choice(image_paths, size=10)
+
 # load our model from disk and flash it to the current device
 print("[INFO] load up model...")
 model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES).to(config.DEVICE)
