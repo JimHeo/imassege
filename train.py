@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from math import ceil
 from imutils import paths
 from tqdm import tqdm
+import albumentations as A
 import matplotlib.pyplot as plt
 import torch
 import time
@@ -35,17 +36,28 @@ else:
 print("[INFO] saving testing image paths...")
 with open(config.TEST_PATHS, "w") as f:
     f.write("\n".join(test_images))
+    
+transforms = A.Compose([
+    A.HorizontalFlip(p=0.25),
+    A.ShiftScaleRotate(p=0.25),
+    A.GaussNoise(p=0.25),
+    A.RandomBrightnessContrast(p=0.25),
+    A.OneOf([A.augmentations.geometric.transforms.ElasticTransform(p=0.25),
+             A.augmentations.geometric.transforms.Perspective(p=0.25),
+             A.augmentations.geometric.transforms.PiecewiseAffine(p=0.25),
+             A.OpticalDistortion(p=0.25)], p=0.25),
+])
 
 # create the train and test datasets
 patch_size = (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH)
 training_set = SegmentationDataset(image_paths=train_images, mask_paths=train_masks,
                                    resize=None, random_crop=patch_size, normalization="z-score",
                                    channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES,
-                                   pooling_level=config.POOLING_LEVEL)
+                                   transforms=transforms, pooling_level=config.POOLING_LEVEL)
 test_set = SegmentationDataset(image_paths=test_images, mask_paths=test_masks,
                                resize=None, random_crop=patch_size, normalization="z-score",
                                channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES,
-                               pooling_level=config.POOLING_LEVEL)
+                               transforms=None, pooling_level=config.POOLING_LEVEL)
 
 print(f"[INFO] found {len(training_set)} examples in the training set...")
 print(f"[INFO] found {len(test_set)} examples in the test set...")

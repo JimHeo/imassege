@@ -6,7 +6,7 @@ import torch
 import cv2
 
 class SegmentationDataset(Dataset):
-    def __init__(self, image_paths, mask_paths, resize=None, random_crop=None, normalization="z-score", channels=1, classes=1, pooling_level=4):
+    def __init__(self, image_paths, mask_paths, resize=None, random_crop=None, normalization="z-score", transforms=None, channels=1, classes=1, pooling_level=4):
         # store the image and mask filepaths, and augmentation
         # transforms
         self.image_paths = image_paths
@@ -16,6 +16,7 @@ class SegmentationDataset(Dataset):
         self.resize = resize
         self.random_crop = random_crop
         self.normalization = normalization
+        self.transforms = transforms
         self.original_shape = None
         self.pooling_level = pooling_level
   
@@ -37,10 +38,10 @@ class SegmentationDataset(Dataset):
         
         # check to see if we are applying any transformations
         self.original_shape = image.shape
-        if self.resize is not None:
+        if self.resize:
             image = resizing(image, self.resize, interpolation=cv2.INTER_LINEAR)
             mask = resizing(mask, self.resize, interpolation=cv2.INTER_NEAREST)
-        elif self.random_crop is not None:
+        elif self.random_crop:
             row_seed = np.random.randint(0, 2**32)
             col_seed = np.random.randint(0, 2**32)
             image = random_cropping(image, self.random_crop, row_seed=row_seed, col_seed=col_seed)
@@ -49,9 +50,12 @@ class SegmentationDataset(Dataset):
             raise Exception("No augmentation is applied. Please set resize or random_crop.")
         
         image = image.astype(np.float32)
-        if self.normalization is not None:
+        if self.normalization:
             image = normalize(image, self.normalization)
-        
+        if self.transforms:
+            augmentation = self.transforms(image=image, mask=mask)
+            image = augmentation["image"]
+            mask = augmentation["mask"]
         # if the image has a mask, then convert the mask to the proper
         mask[mask == 255] = 1
         

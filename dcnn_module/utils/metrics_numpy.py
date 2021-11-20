@@ -46,7 +46,7 @@ class Accuracy(nn.Module):
     def forward(self, y_pred, y_true):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true)
     
-        acc = (tp + tn + self.epsilon) / (tp + fp + fn + tn + self.epsilon)
+        acc = (tp + tn) / (tp + fp + fn + tn + self.epsilon)
         acc = np.sum(acc) / self.num_classes
     
         return acc
@@ -63,7 +63,7 @@ class Precision(nn.Module):
     def forward(self, y_pred, y_true):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true)
     
-        precision = (tp + self.epsilon) / (tp + fp + self.epsilon)
+        precision = tp / (tp + fp + self.epsilon)
         precision = np.sum(precision) / self.num_classes
     
         return precision
@@ -80,7 +80,7 @@ class Recall(nn.Module):
     def forward(self, y_pred, y_true):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true)
         
-        recall = (tp + self.epsilon) / (tp + fn + self.epsilon)
+        recall = tp / (tp + fn + self.epsilon)
         recall = np.sum(recall) / self.num_classes
         
         return recall
@@ -97,7 +97,7 @@ class F1_Score(nn.Module):
     def forward(self, y_pred, y_true):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true)
         
-        f1_score = (2 * tp + self.epsilon) / (2 * tp + fp + fn + self.epsilon)
+        f1_score = 2 * tp / (2 * tp + fp + fn + self.epsilon)
         f1_score = np.sum(f1_score) / self.num_classes
         
         return f1_score
@@ -114,7 +114,7 @@ class IoU(nn.Module):
     def forward(self, y_pred, y_true):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true)
         
-        iou = (tp + self.epsilon) / (tp + fp + fn + self.epsilon)
+        iou = tp / (tp + fp + fn + self.epsilon)
         iou = np.sum(iou) / self.num_classes
     
         return iou

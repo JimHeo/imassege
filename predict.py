@@ -89,7 +89,7 @@ def make_predictions(model, image_path):
 print("[INFO] loading up test image paths...")
 with open(config.TEST_PATHS, "r") as f:
     image_paths = f.read().strip().split("\n")
-# image_paths = np.random.choice(image_paths, size=10)
+image_paths = np.random.choice(image_paths, size=10)
 
 # load our model from disk and flash it to the current device
 print("[INFO] load up model...")

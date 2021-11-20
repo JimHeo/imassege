@@ -41,7 +41,7 @@ class Accuracy(nn.Module):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true, threshold)
         
         # calculate the accuracy
-        accuracy = (tp + tn + self.epsilon) / (tp + fp + fn + tn + self.epsilon)
+        accuracy = (tp + tn) / (tp + fp + fn + tn + self.epsilon)
         accuracy = torch.sum(accuracy) / self.num_classes
         # return the accuracy
         return accuracy
@@ -60,7 +60,7 @@ class Precision(nn.Module):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true, threshold)
         
         # calculate the precision
-        precision = (tp + self.epsilon) / (tp + fp + self.epsilon)
+        precision = tp / (tp + fp + self.epsilon)
         precision = torch.sum(precision) / self.num_classes
         # return the precision
         return precision
@@ -78,7 +78,7 @@ class Recall(nn.Module):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true, threshold)
         
         # calculate the recall
-        recall = (tp + self.epsilon) / (tp + fn + self.epsilon)
+        recall = tp / (tp + fn + self.epsilon)
         recall = torch.sum(recall) / self.num_classes
         # return the recall
         return recall
@@ -95,7 +95,7 @@ class F1_Score(nn.Module):
     def forward(self, y_pred, y_true, threshold=0.5):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true, threshold)
         # calculate the f1 score
-        f1_score = (2 * tp + self.epsilon) / (2 * tp + fp + fn + self.epsilon)
+        f1_score = 2 * tp / (2 * tp + fp + fn + self.epsilon)
         f1_score = torch.sum(f1_score) / self.num_classes
         # return the f1 score
         return f1_score
@@ -113,7 +113,7 @@ class IoU(nn.Module):
         tp, fp, fn, tn = Confusion_Matrix(self.num_classes)(y_pred, y_true, threshold)
         
         # calculate the iou (as jaccard index)
-        iou = (tp + self.epsilon) / (tp + fp + fn + self.epsilon)
+        iou = tp / (tp + fp + fn + self.epsilon)
         iou = torch.sum(iou) / self.num_classes
         # return the iou
         return iou

@@ -54,7 +54,7 @@ INPUT_IMAGE_HEIGHT = 256
 # initialize learning rate, number of epochs to train for, and the
 # batch size
 INIT_LR = 0.001
-NUM_EPOCHS = 10
+NUM_EPOCHS = 50
 BATCH_SIZE = 32
 POOLING_LEVEL = 4
 # POOLING_LEVEL = 1
