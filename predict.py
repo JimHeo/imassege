@@ -1,14 +1,14 @@
 import dcnn_module.config as config
-from dcnn_module.neural_network.unet import UNet
-from dcnn_module.utils.metrics import Accuracy, F1_Score, IOU
+from dcnn_module.neural_network.mini_unet import UNet
 from dcnn_module.utils.preprocessing import cropping_to_fit, padding_to_fit, normalize
+from dcnn_module.utils.metrics_numpy import Accuracy, F1_Score, IoU
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import cv2
 import os
 
-metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IOU(config.NUM_CLASSES)]
+metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IoU(config.NUM_CLASSES)]
 total_metrics = [0. for _ in range(len(metrics))]
 
 def prepare_plot(origin, gt_mask, pred_mask, base_name=None):
@@ -26,6 +26,7 @@ def prepare_plot(origin, gt_mask, pred_mask, base_name=None):
     figure.tight_layout()
     output_path = os.path.join(config.PREDICTION_OUTPUT, base_name)
     plt.savefig(output_path)
+    plt.close()
  
 def make_predictions(model, image_path):
     base_name = os.path.basename(image_path)
@@ -68,14 +69,19 @@ def make_predictions(model, image_path):
             pred_mask = pred_mask.cpu().numpy()
             pred_mask = (pred_mask > config.THRESHOLD) * 255
         else:
+            # if needed, convert 255 to 1
+            gt_mask[gt_mask == 255] = 1
             pred_mask = torch.softmax(pred_mask, dim=0)
-            pred_mask = torch.argmax(pred_mask, dim=0)
             pred_mask = pred_mask.cpu().numpy()
-            
+            pred_mask = np.transpose(pred_mask, (1, 2, 0))
+        
         pred_mask = pred_mask.astype(np.uint8)
         pred_mask = padding_to_fit(pred_mask, gt_mask.shape)
+        
         for i in range(len(metrics)):
-            total_metrics[i] += metrics[i](pred_mask, gt_mask).cpu().detach().numpy()
+            total_metrics[i] += metrics[i](pred_mask, gt_mask)
+        if config.NUM_CLASSES > 1: pred_mask = np.argmax(pred_mask, axis=-1)
+        
         # prepare a plot for visualization
         prepare_plot(origin, gt_mask, pred_mask, base_name)
         
@@ -95,5 +101,7 @@ for path in image_paths:
     make_predictions(model, path)
 
 avg_metrics = []
-for total_metric in total_metrics:
-    avg_metrics.append(total_metric / len(image_paths))
+for metric, total_metric in zip(metrics, total_metrics):
+    avg_metric = total_metric / len(image_paths)
+    avg_metrics.append(avg_metric)
+    print("Mean {}: {:.4f}".format(str(metric), avg_metric))

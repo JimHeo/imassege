@@ -1,7 +1,7 @@
 import dcnn_module.config as config
 from dcnn_module.dataset import SegmentationDataset
-from dcnn_module.neural_network.unet import UNet
-from dcnn_module.utils.metrics import Accuracy, F1_Score, IOU
+from dcnn_module.neural_network.mini_unet import UNet
+from dcnn_module.utils.metrics_torch import Accuracy, F1_Score, IoU
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -64,7 +64,7 @@ model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES)
 # initialize loss function and optimizer
 if config.NUM_CLASSES == 1: loss_func = BCEWithLogitsLoss()
 else: loss_func = CrossEntropyLoss()
-metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IOU(config.NUM_CLASSES)]
+metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IoU(config.NUM_CLASSES)]
 opt = Adam(model.parameters(), lr=config.INIT_LR)
 
 # calculate steps per epoch for training and test set
