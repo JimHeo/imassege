@@ -94,7 +94,7 @@ class Decoder(nn.Module):
         assert self.upsampling in ["bilinear", "transposed"]
         if self.upsampling == "bilinear":
             self.bilinear = nn.Upsample(scale_factor=2, mode="bilinear", align_corners=True)
-            self.pointwise = nn.ModuleList(
+            self.bilinear_pointwise = nn.ModuleList(
                 [nn.Conv2d(feature_map[i], feature_map[i + 1], 1, padding="same") for i in range(len(self.feature_map) - 1)]
             )
         elif self.upsampling == "transposed":
@@ -110,7 +110,7 @@ class Decoder(nn.Module):
             # pass the inputs through the upsampler blocks
             if self.upsampling == "bilinear":
                 x = self.bilinear(x)
-                x = self.pointwise[i](x)
+                x = self.bilinear_pointwise[i](x)
             elif self.upsampling == "transposed":
                 x = self.upconvs[i](x)
             # concatenate them with the current upsampled features,

@@ -4,9 +4,9 @@ import torch
 
 class UNet(nn.Module):
     def __str__(self):
-        return "unet"
+        return "dense_plain_unet"
     
-    def __init__(self, input_channel=1, num_classes=1, feature_map=(64, 128, 256, 512, 1024), downsampling="strided", upsampling="bilinear"):
+    def __init__(self, input_channel=1, num_classes=1, feature_map=(30, 60, 120, 240, 320, 320), downsampling="strided", upsampling="bilinear"):
         super().__init__()
         # initialize the encoder and decoder
         self.enc_feature_map = feature_map
@@ -37,17 +37,19 @@ class Block(nn.Module):
         self.conv1 = nn.Conv2d(in_channels, out_channels, 3, padding="same")
         self.bn1 = nn.BatchNorm2d(out_channels)
         self.relu1 = nn.ReLU()
-        self.conv2 = nn.Conv2d(out_channels, out_channels, 3, padding="same")
+        self.conv2 = nn.Conv2d(in_channels + out_channels, out_channels, 3, padding="same")
         self.bn2 = nn.BatchNorm2d(out_channels)
         self.relu2 = nn.ReLU()
   
     def forward(self, x):
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu1(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu2(x)
+        conv1 = self.conv1(x)
+        conv1 = self.bn1(conv1)
+        conv1 = self.relu1(conv1)
+        conv1 = torch.cat([x, conv1], dim=1)
+        conv2 = self.conv2(conv1)
+        conv2 = self.bn2(conv2)
+        conv2 = self.relu2(conv2)
+        x = torch.cat([x, conv1, conv2], dim=1)
         return x
     
 class Encoder(nn.Module):
@@ -57,6 +59,9 @@ class Encoder(nn.Module):
         # store the encoder blocks and maxpooling layer
         self.enc_blocks = nn.ModuleList(
             [Block(channels[i], channels[i + 1]) for i in range(len(channels) - 1)]
+            )
+        self.pointwise = nn.ModuleList(
+            [nn.Conv2d(2 * (channels[i] + channels[i + 1]), channels[i + 1], 1, padding="same") for i in range(len(channels) - 1)]
             )
         self.downsampling = downsampling
         assert self.downsampling in ["strided", "pool"]
@@ -75,6 +80,7 @@ class Encoder(nn.Module):
             # pass the inputs through the current encoder block, store
             # the outputs, and then apply maxpooling on the output
             x = block(x)
+            x = self.pointwise[i](x)
             block_outputs.append(x)
             if self.downsampling == "strided":
                 if i != len(self.enc_blocks) - 1: x = self.strided_conv[i](x)
@@ -102,7 +108,11 @@ class Decoder(nn.Module):
                 [nn.ConvTranspose2d(feature_map[i], feature_map[i + 1], 2, 2) for i in range(len(feature_map) - 1)]
                 )
         self.dec_blocks = nn.ModuleList(
-            [Block(feature_map[i], feature_map[i + 1]) for i in range(len(feature_map) - 1)])
+            [Block(2 * feature_map[i], feature_map[i]) for i in range(1, len(feature_map))]
+            )
+        self.pointwise = nn.ModuleList(
+            [nn.Conv2d(6 * feature_map[i], feature_map[i], 1, padding="same") for i in range(1, len(feature_map))]
+            )
         
     def forward(self, x, enc_features):
         # loop through the number of channels
@@ -118,5 +128,6 @@ class Decoder(nn.Module):
             # decoder block
             x = torch.cat([x, enc_features[i]], dim=1)
             x = self.dec_blocks[i](x)
+            x = self.pointwise[i](x)
         # return the final decoder output
         return x

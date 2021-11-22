@@ -4,9 +4,9 @@ import torch
 
 class UNet(nn.Module):
     def __str__(self):
-        return "unet"
+        return "plain_unet"
     
-    def __init__(self, input_channel=1, num_classes=1, feature_map=(64, 128, 256, 512, 1024), downsampling="strided", upsampling="bilinear"):
+    def __init__(self, input_channel=1, num_classes=1, feature_map=(30, 60, 120, 240, 320, 320), downsampling="strided", upsampling="bilinear"):
         super().__init__()
         # initialize the encoder and decoder
         self.enc_feature_map = feature_map
@@ -102,7 +102,8 @@ class Decoder(nn.Module):
                 [nn.ConvTranspose2d(feature_map[i], feature_map[i + 1], 2, 2) for i in range(len(feature_map) - 1)]
                 )
         self.dec_blocks = nn.ModuleList(
-            [Block(feature_map[i], feature_map[i + 1]) for i in range(len(feature_map) - 1)])
+            [Block(2 * feature_map[i], feature_map[i]) for i in range(1, len(feature_map))]
+            )
         
     def forward(self, x, enc_features):
         # loop through the number of channels

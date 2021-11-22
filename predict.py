@@ -1,5 +1,5 @@
 import dcnn_module.config as config
-from dcnn_module.neural_network.mini_unet import UNet
+from dcnn_module.neural_network.unet import UNet
 from dcnn_module.utils.preprocessing import cropping_to_fit, padding_to_fit, normalize
 from dcnn_module.utils.metrics_numpy import Accuracy, F1Score, IoU
 import matplotlib.pyplot as plt
@@ -43,8 +43,9 @@ def make_predictions(model, image_path):
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         origin = image.copy()
         # resize the image
-        if str(model) == 'unet': pooling_level = 4
-        elif str(model) == 'mini_unet': pooling_level = 1
+        if str(model) == "unet": pooling_level = 4
+        elif str(model) == "mini_unet": pooling_level = 1
+        elif str(model) == "plain_unet" or str(model) == "dense_plain_unet": pooling_level = 5
         image = cropping_to_fit(image, level=pooling_level)
         image = image.astype(np.float32)
         image = normalize(image, type="z-score")

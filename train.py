@@ -1,6 +1,6 @@
 import dcnn_module.config as config
 from dcnn_module.dataset import SegmentationDataset
-from dcnn_module.neural_network.mini_unet import UNet
+from dcnn_module.neural_network.densePlainUnet import UNet
 from dcnn_module.utils.metrics_torch import Accuracy, F1Score, IoU, BinaryFocalLoss, CategoricalFocalLoss
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss
 from torch.optim import Adam
@@ -15,6 +15,8 @@ import matplotlib.pyplot as plt
 import torch
 import time
 import os
+import smtplib
+from email.mime.text import MIMEText
 
 # load the image and mask filepaths in a sorted manner
 image_paths = sorted(list(paths.list_images(config.IMAGE_DATASET_PATH)))
@@ -183,4 +185,17 @@ for metric in metrics:
     plt.savefig(os.path.join(config.BASE_OUTPUT, str(metric) + ".png"))
 
 # serialize the model to disk
-torch.save(model.state_dict(), config.MODEL_PATH)
+MODEL_NAME = str(model) + config.DATASET_NAME + ".pth"
+torch.save(model.state_dict(), os.path.join(config.BASE_OUTPUT, MODEL_NAME))
+
+# Just for personal, to check the model
+with open("mail_secret.txt", "r") as f:
+    GMAIL_ID = f.readline().strip('\n')
+    GMAIL_PASSWORD = f.readline().strip('\n')
+smtp = smtplib.SMTP("smtp.gmail.com", 587)
+smtp.starttls()
+smtp.login(GMAIL_ID, GMAIL_PASSWORD)
+msg = MIMEText("[MODEL] {}: training is done!".format(str(model)))
+msg["Subject"] = "[imassege] Message from Deep Learning Machine"
+smtp.sendmail(GMAIL_ID, GMAIL_ID, msg.as_string())
+smtp.quit()

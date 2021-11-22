@@ -4,3 +4,4 @@ __pycache__/
 .vscode/
 dataset/
 output/
+mail_secret.txt

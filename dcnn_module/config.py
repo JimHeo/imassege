@@ -2,8 +2,9 @@
 import torch
 import os
 # base path of the dataset
+DATASET_NAME = "BlurDataset"
 # DATASET_PATH = os.path.join("dataset/TGS_Salt", "train")
-DATASET_PATH = os.path.join("dataset", "BlurDataset")
+DATASET_PATH = os.path.join("dataset", DATASET_NAME)
 
 # define the path to the images and masks dataset
 IMAGE_DATASET_PATH = os.path.join(DATASET_PATH, "image")
@@ -45,7 +46,7 @@ PIN_MEMORY = True if DEVICE == "cuda" else False
 
 # define the number of channels in the input, number of classes,
 INPUT_CHANNEL = 3
-NUM_CLASSES = 2
+NUM_CLASSES = 1
 
 # define the preprocessing parameters
 INPUT_IMAGE_WIDTH = 256
@@ -54,7 +55,7 @@ INPUT_IMAGE_HEIGHT = 256
 # initialize learning rate, number of epochs to train for, and the
 # batch size
 INIT_LR = 0.001
-NUM_EPOCHS = 300
+NUM_EPOCHS = 1000
 BATCH_SIZE = 32
 
 # define threshold to filter weak predictions
@@ -63,7 +64,5 @@ THRESHOLD = 0.5
 BASE_OUTPUT = "output"
 # define the path to the output serialized model, model training
 # plot, and testing image paths
-# MODEL_PATH = os.path.join(BASE_OUTPUT, "unet_tgs_salt.pth")
-MODEL_PATH = os.path.join(BASE_OUTPUT, "unet_blur_detection.pth")
 TEST_PATHS = os.path.join(BASE_OUTPUT, "test_paths.txt")
 PREDICTION_OUTPUT = os.path.join(BASE_OUTPUT, "predictions")
