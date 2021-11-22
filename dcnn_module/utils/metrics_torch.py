@@ -14,7 +14,8 @@ class ConfusionMatrix(nn.Module):
     def forward(self, y_pred, y_true, threshold=0.5):
         if self.num_classes == 1:
             _y_pred = torch.sigmoid(y_pred)
-            _y_pred = (y_pred > threshold).to(torch.float32)
+            _y_pred = (_y_pred > threshold).to(torch.float32)
+            _y_true = y_true
         else:
             _y_pred = torch.softmax(y_pred, dim=1)
             _y_true = F.one_hot(y_true, self.num_classes)
@@ -128,6 +129,9 @@ class BinaryFocalLoss(nn.Module):
 
     def forward(self, y_pred, y_true):
         if isinstance(self.alpha, float):
+            alpha = [self.alpha, 1 - self.alpha]
+        elif isinstance(self.alpha, list):
+            assert len(self.alpha) == 2, "alpha should be a float or a list of length 2"
             alpha = self.alpha
         
         y_pred_sig = torch.sigmoid(y_pred)
@@ -136,7 +140,7 @@ class BinaryFocalLoss(nn.Module):
         
         # compute the actual focal loss
         modular = torch.pow(1. - y_pred_sig, self.gamma)
-        focal = -modular * (alpha * y_true_expand * torch.log(y_pred_sig) + (1 - alpha) * (1. - y_true_expand) * torch.log(1. - y_pred_sig))
+        focal = -modular * (alpha[0] * y_true_expand * torch.log(y_pred_sig) + alpha[1] * (1. - y_true_expand) * torch.log(1. - y_pred_sig))
         
         # loss : (B, H, W) -> Scalar
         loss = torch.sum(focal, dim=1)
