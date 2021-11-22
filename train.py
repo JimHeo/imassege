@@ -1,7 +1,7 @@
 import dcnn_module.config as config
 from dcnn_module.dataset import SegmentationDataset
-from dcnn_module.neural_network.unet import UNet
-from dcnn_module.utils.metrics_torch import Accuracy, F1_Score, IoU
+from dcnn_module.neural_network.mini_unet import UNet
+from dcnn_module.utils.metrics_torch import Accuracy, F1Score, IoU, BinaryFocalLoss, CategoricalFocalLoss
 from torch.nn import BCEWithLogitsLoss, CrossEntropyLoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
@@ -53,11 +53,11 @@ patch_size = (config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH)
 training_set = SegmentationDataset(image_paths=train_images, mask_paths=train_masks,
                                    resize=None, random_crop=patch_size, normalization="z-score",
                                    channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES,
-                                   transforms=transforms, pooling_level=config.POOLING_LEVEL)
+                                   transforms=transforms)
 test_set = SegmentationDataset(image_paths=test_images, mask_paths=test_masks,
                                resize=None, random_crop=patch_size, normalization="z-score",
                                channels=config.INPUT_CHANNEL, classes=config.NUM_CLASSES,
-                               transforms=None, pooling_level=config.POOLING_LEVEL)
+                               transforms=None)
 
 print(f"[INFO] found {len(training_set)} examples in the training set...")
 print(f"[INFO] found {len(test_set)} examples in the test set...")
@@ -70,13 +70,15 @@ test_loader = DataLoader(test_set, shuffle=False,
                         num_workers=os.cpu_count())
 
 # initialize Neural Network model
-model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES).to(config.DEVICE)
+model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES, downsampling="strided", upsampling="bilinear").to(config.DEVICE)
 # summary(model, (config.BATCH_SIZE, config.INPUT_CHANNEL, config.INPUT_IMAGE_HEIGHT, config.INPUT_IMAGE_WIDTH))
 
 # initialize loss function and optimizer
 if config.NUM_CLASSES == 1: loss_func = BCEWithLogitsLoss()
 else: loss_func = CrossEntropyLoss()
-metrics = [Accuracy(config.NUM_CLASSES), F1_Score(config.NUM_CLASSES), IoU(config.NUM_CLASSES)]
+# if config.NUM_CLASSES == 1: loss_func = BinaryFocalLoss(alpha=0.25, gamma=2.)
+# else: loss_func = CategoricalFocalLoss(num_classes=config.NUM_CLASSES, alpha=[0.25, 0.75], gamma=2.)
+metrics = [Accuracy(config.NUM_CLASSES), F1Score(config.NUM_CLASSES), IoU(config.NUM_CLASSES)]
 opt = Adam(model.parameters(), lr=config.INIT_LR)
 
 # calculate steps per epoch for training and test set

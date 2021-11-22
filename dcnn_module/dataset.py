@@ -6,7 +6,7 @@ import torch
 import cv2
 
 class SegmentationDataset(Dataset):
-    def __init__(self, image_paths, mask_paths, resize=None, random_crop=None, normalization="z-score", transforms=None, channels=1, classes=1, pooling_level=4):
+    def __init__(self, image_paths, mask_paths, resize=None, random_crop=None, normalization="z-score", transforms=None, channels=1, classes=1):
         # store the image and mask filepaths, and augmentation
         # transforms
         self.image_paths = image_paths
@@ -18,7 +18,6 @@ class SegmentationDataset(Dataset):
         self.normalization = normalization
         self.transforms = transforms
         self.original_shape = None
-        self.pooling_level = pooling_level
   
     def __len__(self):
         # return the number of total samples contained in the dataset

@@ -45,7 +45,7 @@ PIN_MEMORY = True if DEVICE == "cuda" else False
 
 # define the number of channels in the input, number of classes,
 INPUT_CHANNEL = 3
-NUM_CLASSES = 1
+NUM_CLASSES = 2
 
 # define the preprocessing parameters
 INPUT_IMAGE_WIDTH = 256
@@ -54,10 +54,8 @@ INPUT_IMAGE_HEIGHT = 256
 # initialize learning rate, number of epochs to train for, and the
 # batch size
 INIT_LR = 0.001
-NUM_EPOCHS = 50
+NUM_EPOCHS = 300
 BATCH_SIZE = 32
-POOLING_LEVEL = 4
-# POOLING_LEVEL = 1
 
 # define threshold to filter weak predictions
 THRESHOLD = 0.5
