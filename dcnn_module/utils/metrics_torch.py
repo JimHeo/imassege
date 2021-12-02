@@ -128,25 +128,16 @@ class BinaryFocalLoss(nn.Module):
         self.epsilon = epsilon
 
     def forward(self, y_pred, y_true):
-        if isinstance(self.alpha, float):
-            alpha = [self.alpha, 1 - self.alpha]
-        elif isinstance(self.alpha, list):
-            assert len(self.alpha) == 2, "alpha should be a float or a list of length 2"
-            alpha = self.alpha
-        
-        y_pred_sig = torch.sigmoid(y_pred)
-        y_pred_sig = torch.clamp(y_pred_sig, self.epsilon, 1. - self.epsilon)
-        y_true_expand = y_true.unsqueeze(dim=1)
-        
-        # compute the actual focal loss
-        modular = torch.pow(1. - y_pred_sig, self.gamma)
-        focal = -modular * (alpha[0] * y_true_expand * torch.log(y_pred_sig) + alpha[1] * (1. - y_true_expand) * torch.log(1. - y_pred_sig))
-        
-        # loss : (B, H, W) -> Scalar
-        loss = torch.sum(focal, dim=1)
-        loss = torch.mean(loss)
-        
-        return loss
+        alpha = [self.alpha, 1 - self.alpha]
+        gamma = self.gamma
+        epsilon = self.epsilon
+        _y_pred = torch.sigmoid(y_pred)
+        _y_true = y_true.float()
+        # calculate the focal loss
+        focal_loss = -alpha[0] * _y_true * torch.pow((1 - _y_pred), gamma) * torch.log(_y_pred + epsilon) - \
+                     alpha[1] * (1 - _y_true) * torch.pow(_y_pred, gamma) * torch.log(1 - _y_pred + epsilon)
+        # return the focal loss
+        return torch.mean(focal_loss)
 
 class CategoricalFocalLoss(nn.Module):
     def __init__(self, num_classes=3, alpha=0.25, gamma=2., epsilon = 1e-7):
@@ -159,17 +150,20 @@ class CategoricalFocalLoss(nn.Module):
     def forward(self, y_pred, y_true):
         if isinstance(self.alpha, float):
             alpha = self.alpha
-        elif isinstance(self.alpha, list):
-            alpha = torch.from_numpy(np.array(self.alpha)).to(y_pred.device)
-            # alpha : (B, C, H, W)
-            alpha = alpha.view(-1, len(alpha), 1, 1).expand_as(y_pred)
-        elif isinstance(self.alpha, np.ndarray):
-            alpha = torch.from_numpy(self.alpha).to(y_pred.device)
-            # alpha : (B, C, H, W)
-            alpha = alpha.view(-1, len(alpha), 1, 1).expand_as(y_pred)
-        elif isinstance(self.alpha, torch.Tensor):
-            # alpha : (B, C, H, W)
-            alpha = self.alpha.view(-1, len(self.alpha), 1, 1).expand_as(y_pred).to(y_pred.device)
+        else:
+            assert len(self.alpha) == self.num_classes, "alpha should be a float or a list of length num_classes"
+            if isinstance(self.alpha, list):
+                alpha = torch.from_numpy(np.array(self.alpha)).to(y_pred.device)
+                # alpha : (B, C, H, W)
+                alpha = alpha.view(-1, len(alpha), 1, 1)
+            elif isinstance(self.alpha, np.ndarray):
+                alpha = torch.from_numpy(self.alpha).to(y_pred.device)
+                # alpha : (B, C, H, W)
+                alpha = alpha.view(-1, len(alpha), 1, 1)
+            elif isinstance(self.alpha, torch.Tensor):
+                # alpha : (B, C, H, W)
+                alpha = self.alpha.view(-1, len(self.alpha), 1, 1).to(y_pred.device)
+                # alpha = self.alpha.to(y_pred.device)
         
         # compute softmax over the classes axis
         # y_pred_soft : (B, C, H, W)
@@ -183,13 +177,24 @@ class CategoricalFocalLoss(nn.Module):
 
         # compute the actual focal loss
         modular = torch.pow(1. - y_pred_soft, self.gamma)
+        cross_entropy = -y_true_one_hot * torch.log(y_pred_soft)
         
         # alpha, weight, y_pred_soft : (B, C, H, W)
         # focal : (B, C, H, W)
-        focal = -modular * alpha * y_true_one_hot * torch.log(y_pred_soft)
+        focal = alpha * modular * cross_entropy
         
         # loss : (B, H, W) -> Scalar
         loss = torch.sum(focal, dim=1)
         loss = torch.mean(loss)
         
         return loss
+
+class DiceLoss(nn.Module):
+    def __init__(self, num_classes=3, epsilon=1e-7):
+        super().__init__()
+        self.num_classes = num_classes
+        self.epsilon = epsilon
+        self.dice = F1Score(num_classes, epsilon)
+        
+    def forward(self, y_pred, y_true):
+        return 1 - self.dice(y_pred, y_true)

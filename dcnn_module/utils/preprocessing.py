@@ -14,12 +14,12 @@ def random_cropping(image, size, row_seed, col_seed):
     
     return image
 
-def cropping_to_fit(image, level=4):
+def cropping_to_fit(image, output_stride):
     row, col = image.shape[0], image.shape[1]
-    row_start = floor((row % 2**level) / 2)
-    row_end = row - ceil((row % 2**level) / 2)
-    col_start = floor((col % 2**level) / 2)
-    col_end = col - ceil((col % 2**level) / 2)
+    row_start = floor((row % output_stride) / 2)
+    row_end = row - ceil((row % output_stride) / 2)
+    col_start = floor((col % output_stride) / 2)
+    col_end = col - ceil((col % output_stride) / 2)
     image = image[row_start:row_end, col_start:col_end]
     
     return image
