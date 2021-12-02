@@ -89,8 +89,8 @@ image_paths = config.VALID_IMAGES
 
 # load our model from disk and flash it to the current device
 print("[INFO] load up model...")
-model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES, feature_map=(8, 16, 16), downsampling="strided", upsampling="bilinear").to(config.DEVICE)
-# model = DeepLab(num_classes=config.NUM_CLASSES, backbone='resnet', output_stride=16, sync_bn=True, freeze_bn=False).to(config.DEVICE)
+# model = UNet(input_channel=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES, downsampling="strided", upsampling="bilinear").to(config.DEVICE)
+model = DeepLab(input_channels=config.INPUT_CHANNEL, num_classes=config.NUM_CLASSES, backbone='resnet', decoder='unet', output_stride=16, pretrained=config.PRETRAINED, multi_loss=False).to(config.DEVICE)
 MODEL_NAME = str(model) + "_" + config.DATASET_NAME + ".pth"
 model.load_state_dict(torch.load(os.path.join(config.BASE_OUTPUT, MODEL_NAME)))
 # iterate over the randomly selected test image paths
