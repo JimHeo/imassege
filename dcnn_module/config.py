@@ -1,46 +1,15 @@
 # import the necessary packages
 import torch
 import os
-# base path of the dataset
+from dcnn_module.dataset_module.connection import DatasetParser
+
+# split data of the dataset
 DATASET_NAME = "BlurDataset"
-# DATASET_PATH = os.path.join("dataset/TGS_Salt", "train")
-DATASET_PATH = os.path.join("dataset", DATASET_NAME)
-
-# define the path to the images and masks dataset
-IMAGE_DATASET_PATH = os.path.join(DATASET_PATH, "image")
-MASK_DATASET_PATH = os.path.join(DATASET_PATH, "gt")
-
-# define the split
-# SPLIT = 0.2
-SPLIT = 0
-# or define the train and validation list
-if not SPLIT:
-    TRAIN_LIST_PATH = os.path.join(DATASET_PATH, "train_list.txt")
-    VALID_LIST_PATH = os.path.join(DATASET_PATH, "test_list.txt")
-    TRAIN_IMAGES = []
-    TRAIN_MASKS = []
-    VALID_IMAGES = []
-    VALID_MASKS = []
-    with open(TRAIN_LIST_PATH, 'r') as f:
-        while True:
-            line = f.readline()
-            if not line: break
-            parsed_line = line.strip().strip('\'')
-            TRAIN_IMAGES.append(os.path.join(IMAGE_DATASET_PATH, parsed_line))
-            parsed_line = parsed_line.split('.')[0] + '.png'
-            TRAIN_MASKS.append(os.path.join(MASK_DATASET_PATH, parsed_line))
-    with open(VALID_LIST_PATH, 'r') as f:
-        while True:
-            line = f.readline()
-            if not line: break
-            parsed_line = line.strip().strip('\'')
-            VALID_IMAGES.append(os.path.join(IMAGE_DATASET_PATH, parsed_line))
-            parsed_line = parsed_line.split('.')[0] + '.png'
-            VALID_MASKS.append(os.path.join(MASK_DATASET_PATH, parsed_line))
-TRAIN_IMAGES = sorted(TRAIN_IMAGES)
-TRAIN_MASKS = sorted(TRAIN_MASKS)
-VALID_IMAGES = sorted(VALID_IMAGES)
-VALID_MASKS = sorted(VALID_MASKS)
+DATA_SPLIT = 0 # 0.2
+TRAIN_LIST_FILE = "train_list.txt" # None
+VALID_LIST_FILE = "test_list.txt" # None
+DATASET_PARSER = DatasetParser(DATASET_NAME, "dataset")
+TRAIN_IMAGES, TRAIN_MASKS, VALID_IMAGES, VALID_MASKS = DATASET_PARSER.connection(split=DATA_SPLIT, train_list_file=TRAIN_LIST_FILE, valid_list_file=VALID_LIST_FILE)
 
 # determine the device to be used for training and evaluation
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

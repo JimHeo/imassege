@@ -1,5 +1,5 @@
 import dcnn_module.config as config
-from dcnn_module.dataset import SegmentationDataset
+from dcnn_module.dataset_module.dataset import SegmentationDataset
 from dcnn_module.neural_network.mini_unet import UNet
 from dcnn_module.neural_network.deeplab.deeplab import DeepLab
 from dcnn_module.utils.metrics_torch import Accuracy, F1Score, IoU, DiceLoss
@@ -20,20 +20,9 @@ import os
 import smtplib
 from email.mime.text import MIMEText
 
-# load the image and mask filepaths in a sorted manner
-image_paths = sorted(list(paths.list_images(config.IMAGE_DATASET_PATH)))
-mask_paths = sorted(list(paths.list_images(config.MASK_DATASET_PATH)))
-
 # partition the data into training and validation splits
-# using 80% of the data for training and the remaining 20% for validation
-if config.SPLIT:
-    split = train_test_split(image_paths, mask_paths, test_size=config.SPLIT, random_state=42)
-    # unpack the data split
-    (train_images, valid_images) = split[:2]
-    (train_masks, valid_masks) = split[2:]
-else:
-    (train_images, valid_images) = (config.TRAIN_IMAGES, config.VALID_IMAGES)
-    (train_masks, valid_masks) = (config.TRAIN_MASKS, config.VALID_MASKS)
+(train_images, valid_images) = (config.TRAIN_IMAGES, config.VALID_IMAGES)
+(train_masks, valid_masks) = (config.TRAIN_MASKS, config.VALID_MASKS)
     
 transforms = A.Compose([
     A.HorizontalFlip(p=0.25),
