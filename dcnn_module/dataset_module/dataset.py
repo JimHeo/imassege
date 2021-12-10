@@ -26,14 +26,9 @@ class SegmentationDataset(Dataset):
     def __getitem__(self, idx):
         # grab the image path from the current index
         image_path = self.image_paths[idx]
-        # load the image from disk, swap its channels from BGR to RGB,
-        # and read the associated mask from disk in grayscale mode
-        if self.channels == 1:
-            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-        else:
-            image = cv2.imread(image_path)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        mask = cv2.imread(self.mask_paths[idx], cv2.IMREAD_GRAYSCALE)
+        mask_path = self.mask_paths[idx]
+        image = open_image(image_path, channels=self.channels)
+        mask = open_image(mask_path, channels=1)
         
         # check to see if we are applying any transformations
         self.original_shape = image.shape
@@ -72,3 +67,20 @@ class SegmentationDataset(Dataset):
         # return a tuple of the image and its mask
         return (image, mask)
     
+    
+def open_image(image_path, channels=1):
+    normal_format = ["png", "jpg", "jpeg", "bmp", "PNG", "JPG", "JPEG", "BMP"]
+    image_format = image_path.split(".")[-1]
+    if image_format in normal_format:
+        # load the image from disk, swap its channels from BGR to RGB,
+        # and read the associated mask from disk in grayscale mode
+        if channels == 1:
+            image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        else:
+            image = cv2.imread(image_path)
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    elif image_format == "npy":
+        image = np.load(image_path)
+    else:
+        raise NotImplementedError("Image format {} is not supported.".format(image_format))
+    return image

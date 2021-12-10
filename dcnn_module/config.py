@@ -4,6 +4,7 @@ import os
 from dcnn_module.dataset_module.connection import DatasetParser
 
 # split data of the dataset
+# current implementation: "BlurDataset", "TGS_Salt"
 DATASET_NAME = "BlurDataset"
 DATA_SPLIT = 0 # 0.2
 TRAIN_LIST_FILE = "train_list.txt" # None
