@@ -28,6 +28,13 @@ imassege
 ├──dataset/
 |    ├── your-own-dataset/
 ├──dcnn_module/
+|    ├── dataset_module/
+|    |    ├── interface/
+|    |    |    ├── abstract_dataset.py
+|    |    |    ├── blur_detection.py
+|    |    |    ├── tgs_salt.py
+|    |    ├── connection.py
+|    |    ├── dataset.py
 |    ├── neural_network/
 |    |    ├── deeplab/
 |    |    |    ├── backbone/
@@ -53,12 +60,11 @@ imassege
 |    |    ├── plainUnet.py
 |    |    ├── densePlainUnet.py
 |    |    ├── mini_unet.py
-|    ├── config.py
-|    ├── dataset.py
 |    ├── utils/
 |    |    ├── metrics_numpy.py
 |    |    ├── metrics_pytorch.py
 |    |    ├── preprocessing.py
+|    ├── config.py
 ├──output/
 |    ├── predictions/
 ├──train.py
